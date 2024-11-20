@@ -1,0 +1,275 @@
+---
+title: "Moore-PS3"
+format: html
+editor: visual
+---
+
+Setting up workspace
+
+```{r}
+#Clearing R's brain
+rm (list = ls())
+#Making these packages and their associated functions available
+library(tidyverse)
+library(ggfortify)
+library(multcomp)
+library(here)
+```
+
+Pulling in data
+
+```{r}
+bats <- read.csv(here("Data", "bat_data.csv"))
+```
+
+Examining data
+
+```{r}
+#Getting a horizontal summary of the data
+glimpse(bats)
+#Looking at summary statistics
+summary(bats)
+```
+
+Fixing variables and error checking
+
+```{r}
+#Making species into a factor variable because it is a category
+bats$Species <- as.factor(bats$Species)
+
+#Looking at level to check for errors
+levels(bats$Species)
+
+#Making common name into a factor variable because it is a category
+bats$common_name <- as.factor(bats$common_name)
+
+#Looking at level to check for errors
+levels(bats$common_name)
+
+#Making age into a factor variable because it is a category
+bats$age <- as.factor(bats$age)
+
+#Looking at level to check for errors
+levels(bats$age)
+
+#Making sex into a factor variable because it is a category
+bats$sex <- as.factor(bats$sex)
+
+#Looking at level to check for errors
+levels(bats$sex)
+
+#Making type into a factor variable because it is a category
+bats$type <- as.factor(bats$type)
+
+#Looking at level to check for errors
+levels(bats$type)
+
+#There were no errors that needed to be fixed in the factor variables.
+```
+
+#Answering A: Does body mass differ between these five species of bats and, if so, how does body mass differ between the species? In this data, x = species, y = body mass. Species is a categorical variable, and body mass is a ratio variable. We are looking for a difference between group means, so I chose to run an ANOVA as the statistical test.
+
+Plotting data as a boxplot to get an idea of relationships
+
+```{r}
+ggplot(bats, aes(mass_g)) + geom_boxplot() + facet_wrap(~Species) + coord_flip()
+#It appears that LACI has the highest body mass with values centering around ~27g, EPFU has the next highest body mass with values centering around ~21g, LANO having the next highest values around ~15g, MYLU with values around ~10g, and PESU with values around ~8g. These values do seem to strongly differ from each other, so I would predict that body mass does differ among species.
+```
+
+Constructing model
+
+```{r}
+model_bat_mass <- lm(mass_g ~ Species, data = bats)
+```
+
+Checking assumptions
+
+```{r}
+autoplot(model_bat_mass, smooth.color = NA)
+#The residuals vs fitted line looks appropriare to fit the data because there are no unusual shapes with the points. The Q-Q plot shows that the data are mostly normally distrubuted, although there are some points that are curving away from the line on the bottom but it doesn't seem to be too poor of a fit to use a different model. The scale-location plot also has a small slope, but again, it doesn't seem too poor of a fit to need a different model. The residuals vs leverage plot does not indicate any strong outliers. This indicates that the data do fit the assumptions for a linear model to be approproate for analysis. 
+```
+
+Running ANOVA
+
+```{r}
+anova(model_bat_mass)
+#The F-statistic predicts how likely it is that there was no effect of species on body mass (null hypothesis). Because this value is less than 0.05, this indiates that there is a significant relationship between species and body mass. 
+```
+
+Looking at relationships between individual species with a tukey post-hoc test
+
+```{r}
+phc1 <- glht(model_bat_mass, linfct = mcp(Species = "Tukey"))
+summary(phc1)
+#All of the individual relationships between any two species have a p-value of less than 0.05, showing that body mass is significantly different across all species in the sample. 
+```
+
+Making a histogram to get a final plot of the data
+
+```{r}
+ggplot(bats, aes(mass_g)) + geom_histogram() + facet_wrap(~Species) + xlab("Bat Species") + ylab("Mass (g)")
+```
+
+Results: Bat body mass significantly differs among bat species as seen in a one-way ANOVA (p \< 0.05, F = 792.9, df = 4). A tukey post-hoc test showed that body mass significantly differed between each species (p \< 0.05). The species ranked in descending order of body mass are LACI, EPFU, LANO, MYLU, then PESU.
+
+#Answering B. Does body length differ between these five species of bats and, if so, how does body mass differ between the species? In this data, x = species, y = body length Species is a categorical variable, and body length is a ratio variable. We are looking for a difference between group means, so I chose to run an ANOVA as the statistical test.
+
+Plotting data as a boxplot to get an idea of relationships
+
+```{r}
+ggplot(bats, aes(body_length_mm)) + geom_boxplot() + facet_wrap(~Species) + coord_flip()
+#It appears that LACI has the highest body mass with values centering around ~150mm, EPFU has the next highest body mass with values centering around ~120mm, LANO having the next highest values around ~105mm, MYLU with values around ~90mm, and PESU with values around ~80mm. These values do seem to strongly differ from each other, so I would predict that body length does differ among species. 
+```
+
+Constructing model
+
+```{r}
+model_bat_length <- lm(body_length_mm ~ Species, data = bats)
+```
+
+Checking assumptions
+
+```{r}
+autoplot(model_bat_length, smooth.color = NA)
+#The residuals vs fitted line looks appropriare to fit the data because there are no unusual shapes with the points. The Q-Q plot shows that the data are mostly normally distrubuted. The scale-location plot has a small dip in the middle, but it is still mostly linear. The residuals vs leverage plot does not indicate strong outliers. This indicates that the data fit the assumptions of a linear model, so it is appropriate to use in analysis. 
+```
+
+```{r}
+anova(model_bat_length)
+#The F-statistic is less than 0.05, which indiates that there is a significant relationship between species and body mass. 
+```
+
+Looking at relationships between individual species with a tukey post-hoc test
+
+```{r}
+phc2 <- glht(model_bat_length, linfct = mcp(Species = "Tukey"))
+summary(phc2)
+#Almost all of the individual relationships between any two species have a p-value of less than 0.05, showing that body length is significantly different across almost all species in the sample. The only species without significant difference in their body length are PESU and MYLU, which have a p-value of 0.26223. This high p-value indicates that there is not enough evidence to infer that any differences between these species is due to anything other than chance.
+```
+
+Making a histogram to get a final plot of the data
+
+```{r}
+ggplot(bats, aes(body_length_mm)) + geom_histogram() + facet_wrap(~Species) + xlab("Bat Species") + ylab("Body Length (mm)")
+```
+
+Results: Bat body length significantly differs among bat species as seen in a one-way ANOVA (p \< 0.05, F = 70.498, df = 4). A tukey post-hoc test showed that body mass significantly differed among every species (EPFU, LACI, LANO, MYLU, and PESU) (p \< 0.05) expect for between MYLU and PESU (p = 0.26223). LACI had the longest bodies, then EPFU, then LANO, and then MYLU/PESU together.
+
+#Answering C. Is the number of ticks found on the bats associated with their sex or age?
+
+x = sex or age y = number of ticks
+
+In this data, x = sex or age, y = number of ticks. Number of ticks is a ratio variable. Since we are looking to investigate if there is a relationship between the predictor and response variables, I chose to run a regression as the statistical test.
+
+Plotting data as a boxplot to get an idea of relationships
+
+```{r}
+#Age vs number of ticks
+ggplot(bats, aes(tick_num)) + geom_boxplot() + facet_wrap(~age) + coord_flip()
+#Both adult and subadult bats apear to have around 5 ticks. Although subadult ticks have more variance, these data do not look different enough for me to expect significance.
+
+#Sex vs number of ticks
+ggplot(bats, aes(tick_num)) + geom_boxplot() + facet_wrap(~sex) + coord_flip()
+#Female bats appear to have around 4 ticks, while male bats appear to have around 6 ticks. This looks like it might be a significant difference.
+```
+
+Constructing model
+
+```{r}
+#Age vs number of ticks
+model_bat_ticks_age <- lm(tick_num ~ age, data = bats)
+
+#Sex vs number of ticks
+model_bat_ticks_sex <- lm(tick_num ~ sex, data = bats)
+```
+
+Checking assumptions
+
+```{r}
+#Age vs number of ticks
+autoplot(model_bat_ticks_age, smooth.color = NA)
+
+#Sex vs number of ticks
+autoplot(model_bat_ticks_sex, smooth.color = NA)
+
+#For both comparisons, the residuals vs fitted line looks appropriate to fit the data because there are no unusual shapes with the points. The Q-Q plot shows that the data are mostly normally distributed. The scale-location plot is mostly linear. The residuals vs leverage plot does not indicate strong outlines. This indicates that the data fit the assumptions of a linear model, so it is appropriate to use in analysis. 
+
+```
+
+Building ANOVA
+
+```{r}
+#Age vs number of ticks
+anova(model_bat_ticks_age)
+
+#Sex vs number of ticks
+anova(model_bat_ticks_sex)
+
+#The p-value was 0.1056 for age vs number of ticks, indicating that there is not a significant relationship. However, the p-value was < 0.05 for sex vs number of ticks, which does indicate a relationship between sex and number of ticks. 
+```
+
+Viewing summary statistics to see results more clearly
+
+```{r}
+#Age vs number of ticks
+summary(model_bat_ticks_age)
+
+#Sex vs number of ticks
+summary(model_bat_ticks_sex)
+```
+
+Plotting clean graphs
+
+```{r}
+#Age vs number of ticks
+ggplot(bats, aes(tick_num)) + geom_histogram() + facet_wrap(~age) + xlab("Age") + ylab("Number of ticks")
+
+#Sex vs number of ticks
+ggplot(bats, aes(tick_num)) + geom_histogram() + facet_wrap(~sex) + xlab("Sex") + ylab("Number of ticks")
+```
+
+Results: There is not a relationship between age and number of ticks on a bat based on a linear regression (F = 2.657, df = 123, p = 0.1056). There is a significant relationship between sex and number of ticks on a bat based on a linear regression (F = 113.7, df = 123, p \< 0.05).
+
+#Answering D: Disregarding species, is there a relationship in bats between tail length and body length? Both tail length and body length are ratio data. Since there is only one predictor variable, I chose to run a linear regression to determine if there is a relationship between these two variables.
+
+Plotting data as a scatterplot to get an idea of relationships. I am using a scatterplot because both variables are continuous.
+
+```{r}
+ggplot(bats, aes(body_length_mm, tail_length_mm)) + geom_point() + geom_smooth(method = "lm")
+#There appears to be a relationship between tail length and body length. Estimating statistics: body length ranges from ~60-175 and tail length ranges from ~10-100. The slope should be around (100-10)/(175-60) = 0.78, and the y-intercept appears to be around 15.
+```
+
+Constructing model
+
+```{r}
+model_bat_lengths <- lm(body_length_mm ~ tail_length_mm, data = bats)
+```
+
+Checking assumptions
+
+```{r}
+autoplot(model_bat_lengths, smooth.color = NA)
+
+#For both comparisons, the residuals vs fitted line looks appropriate to fit the data because even though the line isn't perfectly straight, there are not any shapes that are too abnormal. The Q-Q plot shows that the data are mostly normally distributed. The scale-location plot is also not perfect, but still mostly linear. The residuals vs leverage plot does not indicate strong outliers. This indicates that the data fit the assumptions of a linear model, so it is appropriate to use in analysis. 
+```
+
+Building ANOVA
+
+```{r}
+anova(model_bat_lengths)
+#The p-value is less than 0.05, which indicates a significant relationship between tail length and body length.
+```
+
+Viewing summary statistics to see results more clearly
+
+```{r}
+summary(model_bat_lengths)
+```
+
+Plotting clean graph
+
+```{r}
+ggplot(bats, aes(body_length_mm, tail_length_mm)) + geom_point() + geom_smooth(method = "lm") + xlab("Body length (mm)") + ylab("Tail length (mm)") + theme_bw()
+```
+
+Results: According to a one-way ANOVA, there is a significant relationship between bat tail length and body length (F = 1037, df = 123, p < 0.05) disregarding species.

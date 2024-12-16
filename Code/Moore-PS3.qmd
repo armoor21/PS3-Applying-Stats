@@ -272,4 +272,4 @@ Plotting clean graph
 ggplot(bats, aes(body_length_mm, tail_length_mm)) + geom_point() + geom_smooth(method = "lm") + xlab("Body length (mm)") + ylab("Tail length (mm)") + theme_bw()
 ```
 
-Results: According to a one-way ANOVA, there is a significant relationship between bat tail length and body length (F = 1037, df = 123, p < 0.05) disregarding species.
+Results: According to a one-way ANOVA, there is a significant relationship between bat tail length and body length (F = 1037, df = 123, p \< 0.05) disregarding species.
